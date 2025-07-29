@@ -53,6 +53,13 @@ $smtpservers = $smtpservers | Sort-Object -Unique
 # Optional: Show existing mail.accountmanager.accounts line
 $accountManagerLine = $prefsLines | Where-Object { $_ -match 'mail\.accountmanager\.accounts' }
 
+# Extract existing accounts from the matched line
+$existingAccounts = @()
+#if ($accountManagerLine -match '"accountmanager\.accounts",\s*"([^"]+)"') {
+if ($accountManagerLine -match 'accountmanager\.accounts",\s*"([^"]+)"') {
+    $existingAccounts = $matches[1].Split(',') | ForEach-Object { $_.Trim() }
+}
+
 # Output summary
 Write-Host "`n--- Thunderbird Account Configuration Summary ---" -ForegroundColor Cyan
 Write-Host "Profile   : $($profileFolder.Name)"
@@ -60,5 +67,5 @@ Write-Host "Accounts  : $($accounts -join ', ')"
 Write-Host "Servers   : $($servers -join ', ')"
 Write-Host "SMTP      : $($smtpservers -join ', ')"
 Write-Host "Identities: $($identities -join ', ')"
-Write-Host "`nCurrent mail.accountmanager.accounts:"
-$accountManagerLine
+Write-Host "`nManager   : $($existingAccounts -join ",")"
+Write-Host "`n"
