@@ -5,10 +5,14 @@
 # All code is released under the MIT License.
 
 # Default values
-$defaultUsername   = "New User"
+$defaultFullName   = "New User"
+$defaultUsername   = "User"
 $defaultEmail      = "new.user@example.com"
 $defaultServer     = "mail.example.com"
 $defaultSmtpServer = "smtp.example.com"
+$defaultIMAPport   =  993  # SSL/TLS
+$defaultPOPport    =  995  # SSL/TLS
+$defaultSMTPport   =  465  # SSL/TLS
 
 $today = Get-Date -Format "yyyy-MM-dd"
 Write-Host "`n--- Generate Thunderbird Draft Configuration File ---" -ForegroundColor Cyan
@@ -35,7 +39,11 @@ do {
 } while ($mailType -ne "POP" -and $mailType -ne "IMAP")
 
 # Prompt with defaults
-$newUsername = Read-Host "`nEnter your username ($defaultUsername)"
+
+$newFullName = Read-Host "`nEnter your full name ($defaultFullName)"
+if ([string]::IsNullOrWhiteSpace($newFullName)) { $newFullName = $defaultFullName }
+
+$newUsername = Read-Host "Enter your username ($defaultUsername)"
 if ([string]::IsNullOrWhiteSpace($newUsername)) { $newUsername = $defaultUsername }
 
 $newEmail = Read-Host "Enter your email address ($defaultEmail)"
@@ -49,6 +57,7 @@ if ([string]::IsNullOrWhiteSpace($newSmtpServer)) { $newSmtpServer = $defaultSmt
 
 # Optional: Display the collected input
 Write-Host "`nCollected Information:"
+Write-Host "Full Name:    $newFullName"
 Write-Host "Username:     $newUsername"
 Write-Host "Email:        $newEmail"
 if ($mailType -eq "POP") {
@@ -61,11 +70,11 @@ Write-Host "SMTP Server:  $newSmtpServer"
 # Set parameters based on mail type
 if ($mailType -eq "POP") {
     $protocol = "pop3"
-    $port = 465
+    $port = $defaultPOPport
     $serverHost = $newServer
 } else {
     $protocol = "imap"
-    $port = 995
+    $port = $defaultIMAPport
     $serverHost = $newServer
 }
 
@@ -136,7 +145,7 @@ user_pref("mail.server.server$nextServer.authMethod", 3); // Normal password
 "@  
 } else {
     $serverEntry = @"
-user_pref("mail.server.server$nextServer.isSecure", true);
+user_pref("mail.server.server$nextServer.isSecure", true); // SSL/TLS
 "@
 }
 
@@ -165,7 +174,7 @@ user_pref("mail.rights.version", 1);
 user_pref("mail.shell.checkDefaultClient", false);
 
 // Identity for account$nextAccount
-user_pref("mail.identity.identity$nextIdentity.fullName", "$newUsername");
+user_pref("mail.identity.identity$nextIdentity.fullName", "$newFullName");
 user_pref("mail.identity.identity$nextIdentity.useremail", "$newEmail");
 user_pref("mail.identity.identity$nextIdentity.smtpServer", "smtp$nextSMTP");
 $identityEntry
@@ -183,10 +192,10 @@ $serverEntry
 
 // Shared SMTP Server $nextSMTP
 user_pref("mail.smtpserver.smtp$nextSMTP.hostname", "$newSmtpServer");
-user_pref("mail.smtpserver.smtp$nextSMTP.port", 465);
+user_pref("mail.smtpserver.smtp$nextSMTP.port", $defaultSMTPport);
 user_pref("mail.smtpserver.smtp$nextSMTP.authMethod", 3); // Normal password
-user_pref("mail.smtpserver.smtp$nextSMTP.socketType", 2); // SSL
-user_pref("mail.smtpserver.smtp$nextSMTP.username", "$newEmail");
+user_pref("mail.smtpserver.smtp$nextSMTP.socketType", 2); // SSL/TLS
+user_pref("mail.smtpserver.smtp$nextSMTP.username", "$newUsername");
 user_pref("mail.smtpservers", "smtp$nextSMTP");
 user_pref("mail.smtp.defaultserver", "smtp$nextSMTP");
 
