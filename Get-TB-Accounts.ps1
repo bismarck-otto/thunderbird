@@ -27,6 +27,7 @@ $prefsLines = Get-Content $prefsPath
 $accounts = @()
 $servers = @()
 $identities = @()
+$smtpservers = @()
 
 foreach ($line in $prefsLines) {
     if ($line -match 'mail\.account\.account(\d+)') {
@@ -38,12 +39,16 @@ foreach ($line in $prefsLines) {
     if ($line -match 'mail\.identity\.(?:identity|id)(\d+)') {
         $identities += "id$($matches[1])"
     }
+    if ($line -match 'mail\.smtpserver\.smtp(\d+)') {
+        $smtpservers += "smtp$($matches[1])"
+    }
 }
 
 # Remove duplicates and sort
 $accounts = $accounts | Sort-Object -Unique
 $servers = $servers | Sort-Object -Unique
 $identities = $identities | Sort-Object -Unique
+$smtpservers = $smtpservers | Sort-Object -Unique
 
 # Optional: Show existing mail.accountmanager.accounts line
 $accountManagerLine = $prefsLines | Where-Object { $_ -match 'mail\.accountmanager\.accounts' }
@@ -53,6 +58,7 @@ Write-Host "`n--- Thunderbird Account Configuration Summary ---" -ForegroundColo
 Write-Host "Profile   : $($profileFolder.Name)"
 Write-Host "Accounts  : $($accounts -join ', ')"
 Write-Host "Servers   : $($servers -join ', ')"
+Write-Host "SMTP      : $($smtpservers -join ', ')"
 Write-Host "Identities: $($identities -join ', ')"
 Write-Host "`nCurrent mail.accountmanager.accounts:"
 $accountManagerLine
