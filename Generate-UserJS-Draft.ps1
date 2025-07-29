@@ -103,9 +103,6 @@ if ($accountManagerLine -match 'accountmanager\.accounts",\s*"([^"]+)"') {
     $existingAccounts = $matches[1].Split(',') | ForEach-Object { $_.Trim() }
 }
 
-# TMP output
-# Write-Host "`nExisting Accounts: $existingAccounts"
-
 # Add the new account ID (e.g., account6)
 $newAccountId = "account$nextAccount"
 if ($existingAccounts -notcontains $newAccountId) {
