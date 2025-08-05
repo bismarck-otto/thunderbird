@@ -1,4 +1,4 @@
-# bismarck-otto 2025-07-29 to Clean-and-Create-Accounts.ps1
+# bismarck-otto 2025-08-06 to Clean-and-Create-Accounts.ps1
 
 # Copyright (c) 2025 Otto von Bismarck
 # This project includes portions generated using OpenAI’s ChatGPT.
@@ -29,7 +29,7 @@ if (Test-Path $readmePath) {
 "@
 }
 
-.\Clean-Thunderbird-Mail.ps1
 .\Remove-Unused-Servers.ps1
+.\Clean-Thunderbird-Mail.ps1
 .\Get-TB-Accounts.ps1
 .\Generate-UserJS-Draft.ps1

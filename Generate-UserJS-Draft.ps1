@@ -1,4 +1,4 @@
-# ChatGPT for bismarck-otto 2025-07-28 to Generate-UserJS-Draft.ps1
+# ChatGPT for bismarck-otto 2025-08-06 to Generate-UserJS-Draft.ps1
 
 # Copyright (c) 2025 Otto von Bismarck
 # This project includes portions generated using OpenAI’s ChatGPT.
@@ -103,45 +103,53 @@ if ($accountManagerLine -match 'accountmanager\.accounts",\s*"([^"]+)"') {
     $existingAccounts = $matches[1].Split(',') | ForEach-Object { $_.Trim() }
 }
 
-# Add the new account ID (e.g., account6)
-$newAccountId = "account$nextAccount"
-if ($existingAccounts -notcontains $newAccountId) {
-    $updatedAccounts = $existingAccounts + $newAccountId
-} else {
-    $updatedAccounts = $existingAccounts
+# Extract the existing mail.smtpservers line (if any)
+$smtpserversLine = $prefsLines | Where-Object { $_ -match 'mail\.smtpservers' }
+
+# Extract existing smtp servers from the matched line
+$existingSMTPs = @()
+#if ($smtpserversLine -match '"mail\.smtpservers",\s*"([^"]+)"') {
+if ($smtpserversLine -match 'mail\.smtpservers",\s*"([^"]+)"') {
+    $existingSMTPs = $matches[1].Split(',') | ForEach-Object { $_.Trim() }
 }
 
 # Now construct a valid user_pref line - mail.identity.identityX
 if ($mailType -eq "POP") {
     $identityEntry = @"
-user_pref("mail.identity.identity$nextIdentity.organization", "");
-user_pref("mail.identity.identity$nextIdentity.reply_to", "");
+user_pref("mail.identity.id$nextIdentity.organization", "");
+user_pref("mail.identity.id$nextIdentity.reply_to", "");
 "@  
 } else {
     $identityEntry = @"
-user_pref("mail.identity.identity$nextIdentity.archive_folder", "imap://$newEmail/Archives");
-user_pref("mail.identity.identity$nextIdentity.draft_folder", "imap://$newEmail/Drafts");
-user_pref("mail.identity.identity$nextIdentity.fcc_folder", "imap://$newEmail/Sent");
-user_pref("mail.identity.identity$nextIdentity.trash_folder", "imap://$newEmail/Trash");
+user_pref("mail.identity.id$nextIdentity.archive_folder", "imap://$newEmail/Archives");
+user_pref("mail.identity.id$nextIdentity.draft_folder", "imap://$newEmail/Drafts");
+user_pref("mail.identity.id$nextIdentity.fcc_folder", "imap://$newEmail/Sent");
+user_pref("mail.identity.id$nextIdentity.trash_folder", "imap://$newEmail/Trash");
 "@
 }
 
 # Now construct a valid user_pref line - mail.account.accountX
 if ($mailType -eq "POP") {
     $accountEntry = @"
-user_pref("mail.account.account$nextAccount", "server$nextServer,identity$nextIdentity");
+user_pref("mail.account.account$nextAccount.identities", "id$nextIdentity");
+user_pref("mail.account.account$nextAccount.server", "server$nextServer");
 "@  
 } else {
     $accountEntry = @"
+user_pref("mail.account.account$nextAccount.identities", "id$nextIdentity");
 user_pref("mail.account.account$nextAccount.server", "server$nextServer");
-user_pref("mail.account.account$nextAccount.identities", "identity$nextIdentity");
 "@
 }
+
+# Now construct a valid lastKey_pref line
+$lastKeyEntry = @"
+user_pref("mail.account.lastKey", $nextAccount);
+"@
 
 # Now construct a valid user_pref line - mail.server.server
 if ($mailType -eq "POP") {
     $serverEntry = @"
-user_pref("mail.server.server$nextServer.socketType", 2); // SSL/TLS
+user_pref("mail.server.server$nextServer.socketType", 3); // SSL/TLS
 user_pref("mail.server.server$nextServer.authMethod", 3); // Normal password
 "@  
 } else {
@@ -151,12 +159,15 @@ user_pref("mail.server.server$nextServer.isSecure", true); // SSL/TLS
 }
 
 # Now construct a valid user_pref line - mail.accountmanager.accounts
-$accountManagerEntry = 'user_pref("mail.accountmanager.accounts", "' + ($updatedAccounts -join ",") + '");'
+$accountManagerEntry = 'user_pref("mail.accountmanager.accounts", "' + ($existingAccounts -join ",") + ',account' + $nextAccount + '");'
+
+# Now construct a valid user_pref line - mail.smtpservers
+$SMTPserversEntry = 'user_pref("mail.smtpservers", "' + ($existingSMTPs -join ",") + ',smtp' + $nextSMTP + '");'
 
 # Compose user.js draft
 $userJS = @"
 // Draft user-draft.js script generated $today
-// ChatGPT for bismarck-otto 2025-07-29 to set up new accounts
+// ChatGPT for bismarck-otto 2025-08-05 to set up new accounts
 
 // Copyright (c) 2025 Otto von Bismarck
 // This project includes portions generated using OpenAI’s ChatGPT.
@@ -175,13 +186,16 @@ user_pref("mail.rights.version", 1);
 user_pref("mail.shell.checkDefaultClient", false);
 
 // Identity for account$nextAccount
-user_pref("mail.identity.identity$nextIdentity.fullName", "$newFullName");
-user_pref("mail.identity.identity$nextIdentity.useremail", "$newEmail");
-user_pref("mail.identity.identity$nextIdentity.smtpServer", "smtp$nextSMTP");
+user_pref("mail.identity.id$nextIdentity.fullName", "$newFullName");
+user_pref("mail.identity.id$nextIdentity.useremail", "$newEmail");
+user_pref("mail.identity.id$nextIdentity.smtpServer", "smtp$nextSMTP");
 $identityEntry
 
 // Account$nextAccount - $mailType
 $accountEntry
+
+// LastKey in mail.account.lastKey
+$lastKeyEntry
 
 // $mailType Server $nextServer
 user_pref("mail.server.server$nextServer.hostname", "$serverHost");
@@ -195,10 +209,12 @@ $serverEntry
 user_pref("mail.smtpserver.smtp$nextSMTP.hostname", "$newSmtpServer");
 user_pref("mail.smtpserver.smtp$nextSMTP.port", $defaultSMTPport);
 user_pref("mail.smtpserver.smtp$nextSMTP.authMethod", 3); // Normal password
-user_pref("mail.smtpserver.smtp$nextSMTP.socketType", 2); // SSL/TLS
+user_pref("mail.smtpserver.smtp$nextSMTP.socketType", 3); // SSL/TLS
+user_pref("mail.smtpserver.smtp$nextSMTP.try_ssl", 3); 
 user_pref("mail.smtpserver.smtp$nextSMTP.username", "$newUsername");
-user_pref("mail.smtpservers", "smtp$nextSMTP");
-user_pref("mail.smtp.defaultserver", "smtp$nextSMTP");
+
+// SMTP servers
+$SMTPserversEntry
 
 // Account manager
 $accountManagerEntry

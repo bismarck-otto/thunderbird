@@ -1,4 +1,4 @@
-# ChatGPT for bismarck-otto 2025-07-29 to Remove-Unused-Servers.ps1
+# ChatGPT for bismarck-otto 2025-08-06 to Remove-Unused-Servers.ps1
 
 # Copyright (c) 2025 Otto von Bismarck
 # This project includes portions generated using OpenAI’s ChatGPT.

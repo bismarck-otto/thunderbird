@@ -1,4 +1,4 @@
-# ChatGPT for bismarck-otto 2025-07-28 to Get-TB-Accounts.ps1
+# ChatGPT for bismarck-otto 2025-08-06 to Get-TB-Accounts.ps1
 
 # Copyright (c) 2025 Otto von Bismarck
 # This project includes portions generated using OpenAI’s ChatGPT.
